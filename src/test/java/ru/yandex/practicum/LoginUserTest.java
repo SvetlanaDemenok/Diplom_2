@@ -5,7 +5,7 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.practicum.stellaburgers.api.ApiClient;
+import ru.yandex.practicum.stellaburgers.api.client.UserClient;
 import ru.yandex.practicum.stellaburgers.api.model.CreateUserResponse;
 import ru.yandex.practicum.stellaburgers.api.model.ErrorResponse;
 import ru.yandex.practicum.stellaburgers.api.model.LoginUserResponse;
@@ -16,29 +16,29 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.Assert.*;
 
 public class LoginUserTest {
-    ApiClient apiClient;
+    UserClient userClient;
     User user;
     Response response;
 
     @Before
     public void setUp() {
-        apiClient = new ApiClient();
+        userClient = new UserClient();
         user = User.getRandomUser();
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
     }
 
     @After
     public void tearDown() {
         if (response.statusCode() == SC_OK) {
-            apiClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
-            apiClient.removeUser();
+            userClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
+            userClient.removeUser();
         }
     }
 
     @Test
     @DisplayName("Логин под существующим пользователем")
     public void successLoginTest() {
-        LoginUserResponse loginUserResponse = apiClient.loginUser(user.getEmail(), user.getPassword())
+        LoginUserResponse loginUserResponse = userClient.loginUser(user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -52,7 +52,7 @@ public class LoginUserTest {
     @Test
     @DisplayName("Логин с неверным email")
     public void incorrectEmailLoginTest() {
-        ErrorResponse errorResponse = apiClient.loginUser("incorrect-" + user.getEmail(), user.getPassword())
+        ErrorResponse errorResponse = userClient.loginUser("incorrect-" + user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_UNAUTHORIZED)
                 .extract()
@@ -65,7 +65,7 @@ public class LoginUserTest {
     @Test
     @DisplayName("Логин с неверным паролем")
     public void incorrectPasswordLoginTest() {
-        ErrorResponse errorResponse = apiClient.loginUser(user.getEmail(), "incorrect-" + user.getPassword())
+        ErrorResponse errorResponse = userClient.loginUser(user.getEmail(), "incorrect-" + user.getPassword())
                 .then()
                 .statusCode(SC_UNAUTHORIZED)
                 .extract()

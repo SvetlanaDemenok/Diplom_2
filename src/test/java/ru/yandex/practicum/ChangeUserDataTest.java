@@ -5,7 +5,7 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.practicum.stellaburgers.api.ApiClient;
+import ru.yandex.practicum.stellaburgers.api.client.UserClient;
 import ru.yandex.practicum.stellaburgers.api.model.*;
 
 import static org.apache.http.HttpStatus.SC_OK;
@@ -13,22 +13,22 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.Assert.*;
 
 public class ChangeUserDataTest {
-    ApiClient apiClient;
+    UserClient userClient;
     User user;
     Response response;
 
     @Before
     public void setUp() {
-        apiClient = new ApiClient();
+        userClient = new UserClient();
         user = User.getRandomUser();
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
     }
 
     @After
     public void tearDown() {
         if (response.statusCode() == SC_OK) {
-            apiClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
-            apiClient.removeUser();
+            userClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
+            userClient.removeUser();
         }
     }
 
@@ -36,14 +36,14 @@ public class ChangeUserDataTest {
     @DisplayName("Изменение Email пользователя с авторизацией")
     public void changeEmailWithAuthTest() {
         String newEmail = "new-" + user.getEmail();
-        LoginUserResponse loginUserResponse = apiClient.loginUser(user.getEmail(), user.getPassword())
+        LoginUserResponse loginUserResponse = userClient.loginUser(user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
                 .as(LoginUserResponse.class);
-        apiClient.setAccessToken(loginUserResponse.getAccessToken());
+        userClient.setAccessToken(loginUserResponse.getAccessToken());
 
-        ChangeUserDataResponse changeUserDataResponse = apiClient.changeUserData(newEmail, user.getName())
+        ChangeUserDataResponse changeUserDataResponse = userClient.changeUserData(newEmail, user.getName())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -58,14 +58,14 @@ public class ChangeUserDataTest {
     @DisplayName("Изменение Name пользователя с авторизацией")
     public void changeNameWithAuthTest() {
         String newName = "new-" + user.getName();
-        LoginUserResponse loginUserResponse = apiClient.loginUser(user.getEmail(), user.getPassword())
+        LoginUserResponse loginUserResponse = userClient.loginUser(user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
                 .as(LoginUserResponse.class);
-        apiClient.setAccessToken(loginUserResponse.getAccessToken());
+        userClient.setAccessToken(loginUserResponse.getAccessToken());
 
-        ChangeUserDataResponse changeUserDataResponse = apiClient.changeUserData(user.getEmail(), newName)
+        ChangeUserDataResponse changeUserDataResponse = userClient.changeUserData(user.getEmail(), newName)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -81,7 +81,7 @@ public class ChangeUserDataTest {
     public void changeEmailWithoutAuthTest() {
         String newEmail = "new-" + user.getEmail();
 
-        ErrorResponse errorResponse = apiClient.changeUserData(newEmail, user.getName())
+        ErrorResponse errorResponse = userClient.changeUserData(newEmail, user.getName())
                 .then()
                 .statusCode(SC_UNAUTHORIZED)
                 .extract()
@@ -96,7 +96,7 @@ public class ChangeUserDataTest {
     public void changeNameWithoutAuthTest() {
         String newName = "new-" + user.getName();
 
-        ErrorResponse errorResponse = apiClient.changeUserData(newName, user.getName())
+        ErrorResponse errorResponse = userClient.changeUserData(newName, user.getName())
                 .then()
                 .assertThat()
                 .statusCode(SC_UNAUTHORIZED)

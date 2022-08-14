@@ -3,7 +3,7 @@ package ru.yandex.practicum.stellaburgers.api.model;
 public class CreateOrderResponse {
     private boolean success;
     private String name;
-    OrderResponse order;
+    private OrderResponse order;
 
     public boolean isSuccess() {
         return success;

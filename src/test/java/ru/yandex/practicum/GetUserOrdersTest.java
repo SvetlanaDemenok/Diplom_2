@@ -5,7 +5,8 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.practicum.stellaburgers.api.ApiClient;
+import ru.yandex.practicum.stellaburgers.api.client.OrderClient;
+import ru.yandex.practicum.stellaburgers.api.client.UserClient;
 import ru.yandex.practicum.stellaburgers.api.model.*;
 
 import static org.apache.http.HttpStatus.SC_OK;
@@ -13,16 +14,18 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.Assert.*;
 
 public class GetUserOrdersTest {
-    ApiClient apiClient;
+    UserClient userClient;
+    OrderClient orderClient;
     User user;
     Order order;
     Response response;
 
     @Before
     public void setUp() {
-        apiClient = new ApiClient();
+        userClient = new UserClient();
+        orderClient = new OrderClient();
         user = User.getRandomUser();
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         order = new Order();
         order.addIngredient("61c0c5a71d1f82001bdaaa6d");
@@ -32,26 +35,26 @@ public class GetUserOrdersTest {
     @After
     public void tearDown() {
         if (response.statusCode() == SC_OK) {
-            apiClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
-            apiClient.removeUser();
+            userClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
+            userClient.removeUser();
         }
     }
 
     @Test
     @DisplayName("Получение заказов пользователя с авторизацией")
     public void getAuthUserOrdersTest() {
-        LoginUserResponse loginUserResponse = apiClient.loginUser(user.getEmail(), user.getPassword())
+        LoginUserResponse loginUserResponse = userClient.loginUser(user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
                 .as(LoginUserResponse.class);
-        apiClient.setAccessToken(loginUserResponse.getAccessToken());
+        orderClient.setAccessToken(loginUserResponse.getAccessToken());
 
-        apiClient.createOrder(order)
+        orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_OK);
 
-        GetUserOrdersResponse getUserOrdersResponse = apiClient.getUserOrders()
+        GetUserOrdersResponse getUserOrdersResponse = orderClient.getUserOrders()
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -64,11 +67,11 @@ public class GetUserOrdersTest {
     @Test
     @DisplayName("Получение заказов пользователя без авторизации")
     public void getUnAuthUserOrdersTest() {
-        apiClient.createOrder(order)
+        orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_OK);
 
-        ErrorResponse errorResponse = apiClient.getUserOrders()
+        ErrorResponse errorResponse = orderClient.getUserOrders()
                 .then()
                 .statusCode(SC_UNAUTHORIZED)
                 .extract()

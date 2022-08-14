@@ -5,23 +5,26 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.practicum.stellaburgers.api.ApiClient;
+import ru.yandex.practicum.stellaburgers.api.client.OrderClient;
+import ru.yandex.practicum.stellaburgers.api.client.UserClient;
 import ru.yandex.practicum.stellaburgers.api.model.*;
 
 import static org.apache.http.HttpStatus.*;
 import static org.junit.Assert.*;
 
 public class CreateOrderTest {
-    ApiClient apiClient;
+    UserClient userClient;
+    OrderClient orderClient;
     User user;
     Order order;
     Response response;
 
     @Before
     public void setUp() {
-        apiClient = new ApiClient();
+        userClient = new UserClient();
+        orderClient = new OrderClient();
         user = User.getRandomUser();
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         order = new Order();
         order.addIngredient("61c0c5a71d1f82001bdaaa6d");
@@ -31,22 +34,22 @@ public class CreateOrderTest {
     @After
     public void tearDown() {
         if (response.statusCode() == SC_OK) {
-            apiClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
-            apiClient.removeUser();
+            userClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
+            userClient.removeUser();
         }
     }
 
     @Test
     @DisplayName("Создание заказа с авторизацией")
     public void createOrderWithAuthTest() {
-        LoginUserResponse loginUserResponse = apiClient.loginUser(user.getEmail(), user.getPassword())
+        LoginUserResponse loginUserResponse = userClient.loginUser(user.getEmail(), user.getPassword())
                 .then()
                 .statusCode(SC_OK)
                 .extract()
                 .as(LoginUserResponse.class);
-        apiClient.setAccessToken(loginUserResponse.getAccessToken());
+        orderClient.setAccessToken(loginUserResponse.getAccessToken());
 
-        CreateOrderResponse createOrderResponse = apiClient.createOrder(order)
+        CreateOrderResponse createOrderResponse = orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -59,7 +62,7 @@ public class CreateOrderTest {
     @Test
     @DisplayName("Создание заказа без авторизации")
     public void createOrderWithoutAuthTest() {
-        CreateOrderResponse createOrderResponse = apiClient.createOrder(order)
+        CreateOrderResponse createOrderResponse = orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_OK)
                 .extract()
@@ -74,7 +77,7 @@ public class CreateOrderTest {
     public void createOrderWithoutIngredientsTest() {
         order.clearIngredients();
 
-        ErrorResponse errorResponse = apiClient.createOrder(order)
+        ErrorResponse errorResponse = orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_BAD_REQUEST)
                 .extract()
@@ -90,7 +93,7 @@ public class CreateOrderTest {
         order.addIngredient("");
         order.addIngredient("666");
 
-        apiClient.createOrder(order)
+        orderClient.createOrder(order)
                 .then()
                 .statusCode(SC_INTERNAL_SERVER_ERROR);
     }

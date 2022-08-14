@@ -5,7 +5,7 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.yandex.practicum.stellaburgers.api.ApiClient;
+import ru.yandex.practicum.stellaburgers.api.client.UserClient;
 import ru.yandex.practicum.stellaburgers.api.model.CreateUserResponse;
 import ru.yandex.practicum.stellaburgers.api.model.ErrorResponse;
 import ru.yandex.practicum.stellaburgers.api.model.User;
@@ -16,13 +16,13 @@ import static ru.yandex.practicum.stellaburgers.api.model.User.getRandomUser;
 
 @DisplayName("Создание пользователя")
 public class CreateUserTest {
-    ApiClient apiClient;
+    UserClient userClient;
     User user;
     Response response;
 
     @Before
     public void setUp() {
-        apiClient = new ApiClient();
+        userClient = new UserClient();
 
         // Готовим данные
         user = getRandomUser();
@@ -31,8 +31,8 @@ public class CreateUserTest {
     @After
     public void tearDown() {
         if (response.statusCode() == SC_OK) {
-            apiClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
-            apiClient.removeUser();
+            userClient.setAccessToken(response.as(CreateUserResponse.class).getAccessToken());
+            userClient.removeUser();
         }
     }
 
@@ -40,7 +40,7 @@ public class CreateUserTest {
     @DisplayName("Успешное создание пользователя")
     public void createUserTest() {
         // Делаем действие
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         // Проверка
         CreateUserResponse createUserResponse = response
@@ -58,13 +58,13 @@ public class CreateUserTest {
     @DisplayName("Создание двух одинаковых пользователей")
     public void createDupUserTest() {
         // Делаем действие
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         // Проверка
         response.then().statusCode(SC_OK);
 
         // Делаем действие еще раз
-        ErrorResponse errorResponse = apiClient.createUser(user)
+        ErrorResponse errorResponse = userClient.createUser(user)
                 .then()
                 .statusCode(SC_FORBIDDEN)
                 .extract()
@@ -81,7 +81,7 @@ public class CreateUserTest {
         user.setEmail("");
 
         // Делаем действие
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         // Проверка
         ErrorResponse errorResponse = response
@@ -100,7 +100,7 @@ public class CreateUserTest {
         user.setPassword("");
 
         // Делаем действие
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         // Проверка
         ErrorResponse errorResponse = response
@@ -119,7 +119,7 @@ public class CreateUserTest {
         user.setName("");
 
         // Делаем действие
-        response = apiClient.createUser(user);
+        response = userClient.createUser(user);
 
         // Проверка
         ErrorResponse errorResponse = response
